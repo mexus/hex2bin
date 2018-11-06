@@ -11,10 +11,7 @@ pub enum Mode {
 }
 
 #[derive(StructOpt)]
-#[structopt(
-    name = "hex 2 bin translator",
-    about = "A tool to translate hex dumps back into binaries"
-)]
+#[structopt(name = "hex -> bin translator")]
 pub struct Args {
     #[structopt(short = "i", long = "input", help = "Input hex file")]
     pub in_file: PathBuf,

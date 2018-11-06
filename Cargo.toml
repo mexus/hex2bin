@@ -1,8 +1,12 @@
 [package]
 authors = ["mexus <gilaldpellaeon@gmail.com>"]
-edition = "2018"
+description = "A tool to translate hex dumps back into binaries"
 name = "hex2bin"
 version = "0.1.0"
+license = "MIT/Apache-2.0"
+repository = "https://github.com/mexus/hex2bin"
+readme = "README.md"
+edition = "2018"
 
 [dependencies]
 crossbeam-channel = "0.3.0"
