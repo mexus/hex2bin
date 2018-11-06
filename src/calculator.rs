@@ -1,8 +1,7 @@
 use super::{Chunks, ChunksMut};
-use rayon::{ThreadPool, ThreadPoolBuildError, ThreadPoolBuilder};
+use crossbeam_utils::thread::scope;
 
 pub struct Calculator {
-    thread_pool: ThreadPool,
     thread_count: usize,
 }
 
@@ -17,7 +16,7 @@ fn hex_to_dec(s: u8) -> u8 {
 }
 
 #[inline(always)]
-fn calculate(input: &[u8], output: &mut [u8]) {
+fn calculate_hex_to_bin(input: &[u8], output: &mut [u8]) {
     for i in 0..output.len() {
         unsafe {
             let bin = hex_to_dec(*input.get_unchecked(2 * i)) << 4
@@ -28,25 +27,35 @@ fn calculate(input: &[u8], output: &mut [u8]) {
 }
 
 impl Calculator {
-    pub fn new(threads: usize) -> Result<Self, ThreadPoolBuildError> {
-        Ok(Calculator {
-            thread_pool: ThreadPoolBuilder::new().num_threads(threads).build()?,
+    pub fn new(threads: usize) -> Self {
+        Calculator {
             thread_count: threads,
-        })
+        }
+    }
+
+    pub fn predict_writing_chunk_size(&self, reading_chunk_size: usize) -> usize {
+        assert!(
+            reading_chunk_size % 2 == 0,
+            "Size of a reading chunk should be even"
+        );
+        reading_chunk_size / 2
     }
 
     #[inline]
-    pub fn process(&self, reading_chunk: &[u8], output: &mut [u8]) {
-        let writing_chunk = unsafe { output.get_unchecked_mut(..reading_chunk.len() / 2) };
+    pub fn process(&self, reading_chunk: &[u8], output: &mut [u8]) -> usize {
+        let writing_chunk_len = self.predict_writing_chunk_size(reading_chunk.len());
+        let writing_chunk = unsafe { output.get_unchecked_mut(..writing_chunk_len) };
+
         let input_per_thread = Chunks::new(reading_chunk, reading_chunk.len() / self.thread_count);
         let output_per_thread =
             ChunksMut::new(writing_chunk, writing_chunk.len() / self.thread_count);
         let per_thread = input_per_thread.zip(output_per_thread);
 
-        self.thread_pool.scope(|scope| {
+        scope(|scope| {
             for (input, output) in per_thread {
-                scope.spawn(move |_| calculate(input, output));
+                scope.spawn(move || calculate_hex_to_bin(input, output));
             }
         });
+        writing_chunk_len
     }
 }

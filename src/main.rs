@@ -7,7 +7,7 @@ mod args;
 mod calculator;
 mod chunks;
 mod chunks_mut;
-mod complex;
+mod crossbeam;
 mod simple;
 
 use self::args::{Args, Mode};
@@ -29,11 +29,11 @@ fn main() -> io::Result<()> {
         .open(&args.out_file)?;
     output.set_len(input.len() as u64 / 2)?;
 
-    let calculator = Calculator::new(4).unwrap();
+    let calculator = Calculator::new(4);
 
     match args.mode {
-        Mode::Complex => complex::copy(&input, output, args.chunk_size, calculator)?,
         Mode::Simple => simple::copy(&input, output, args.chunk_size, calculator)?,
+        Mode::Crossbeam => crossbeam::copy(&input, output, args.chunk_size, calculator)?,
     }
 
     let end = Instant::now();

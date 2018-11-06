@@ -6,8 +6,8 @@ use structopt::StructOpt;
 pub enum Mode {
     #[structopt(name = "simple")]
     Simple,
-    #[structopt(name = "complex")]
-    Complex,
+    #[structopt(name = "crossbeam")]
+    Crossbeam,
 }
 
 #[derive(StructOpt)]
