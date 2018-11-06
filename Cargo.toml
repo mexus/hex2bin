@@ -1,0 +1,10 @@
+[package]
+authors = ["mexus <gilaldpellaeon@gmail.com>"]
+edition = "2018"
+name = "hex2bin"
+version = "0.1.0"
+
+[dependencies]
+memmap = "0.7.0"
+rayon = "1.0.3"
+structopt = "0.2.13"
