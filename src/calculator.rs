@@ -33,17 +33,9 @@ impl Calculator {
         }
     }
 
-    pub fn predict_writing_chunk_size(&self, reading_chunk_size: usize) -> usize {
-        assert!(
-            reading_chunk_size % 2 == 0,
-            "Size of a reading chunk should be even"
-        );
-        reading_chunk_size / 2
-    }
-
     #[inline]
     pub fn process(&self, reading_chunk: &[u8], output: &mut [u8]) -> usize {
-        let writing_chunk_len = self.predict_writing_chunk_size(reading_chunk.len());
+        let writing_chunk_len = reading_chunk.len() / 2;
         let writing_chunk = unsafe { output.get_unchecked_mut(..writing_chunk_len) };
 
         let input_per_thread = Chunks::new(reading_chunk, reading_chunk.len() / self.thread_count);

@@ -10,7 +10,7 @@ pub fn copy<W>(
 where
     W: Write,
 {
-    let writing_chunk_len = calculator.predict_writing_chunk_size(reading_chunk_len);
+    let writing_chunk_len = reading_chunk_len / 2;
     let mut output_buf = vec![0; writing_chunk_len];
     for reading_chunk in Chunks::new(input_bytes, reading_chunk_len) {
         let bytes_to_write = calculator.process(reading_chunk, &mut output_buf);

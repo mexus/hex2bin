@@ -42,7 +42,7 @@ pub fn copy<W>(
 where
     W: Write + Send + 'static,
 {
-    let writing_chunk_len = calculator.predict_writing_chunk_size(reading_chunk_len);
+    let writing_chunk_len = reading_chunk_len / 2;
     let remote_buffer = vec![0; writing_chunk_len];
     let mut local_buffer = remote_buffer.clone();
 
