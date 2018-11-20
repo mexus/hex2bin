@@ -13,7 +13,6 @@ enum Commands {
     },
 }
 
-#[inline(always)]
 fn worker<W: Write>(receiver: &Receiver<Commands>, mut internal: Vec<u8>, mut writer: W) {
     while let Ok(cmd) = receiver.recv() {
         match cmd {
@@ -32,7 +31,6 @@ fn worker<W: Write>(receiver: &Receiver<Commands>, mut internal: Vec<u8>, mut wr
     }
 }
 
-#[inline(always)]
 pub fn copy<W>(
     input: &[u8],
     output: W,
