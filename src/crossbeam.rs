@@ -51,14 +51,14 @@ where
         let (thread_sender, thread_receiver) = bounded(0);
         worker_thread = thread::spawn(move || worker(&thread_receiver, remote_buffer, output));
 
+        let (sender, receiver) = bounded(0);
         for reading_chunk in Chunks::new(input, reading_chunk_len) {
             let bytes_to_write = calculator.process(reading_chunk, &mut local_buffer);
-            let (sender, receiver) = bounded(0);
             thread_sender
                 .send(Commands::Write {
                     data: local_buffer,
                     len: bytes_to_write,
-                    sender,
+                    sender: sender.clone(),
                 })
                 .unwrap();
             local_buffer = receiver.recv().unwrap();
