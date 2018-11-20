@@ -11,13 +11,12 @@ enum Commands {
         len: usize,
         sender: Sender<Vec<u8>>,
     },
-    Quit,
 }
 
 #[inline(always)]
 fn worker<W: Write>(receiver: &Receiver<Commands>, mut internal: Vec<u8>, mut writer: W) {
-    loop {
-        match receiver.recv().unwrap() {
+    while let Ok(cmd) = receiver.recv() {
+        match cmd {
             Commands::Write { len: 0, .. } => break,
             Commands::Write {
                 mut data,
@@ -26,11 +25,9 @@ fn worker<W: Write>(receiver: &Receiver<Commands>, mut internal: Vec<u8>, mut wr
             } => {
                 mem::swap(&mut data, &mut internal);
                 sender.send(data).unwrap();
-                unsafe {
-                    writer.write_all(internal.get_unchecked(..len)).unwrap();
-                }
+                let buf = unsafe { internal.get_unchecked(..len) };
+                writer.write_all(buf).unwrap();
             }
-            Commands::Quit => break,
         }
     }
 }
@@ -49,22 +46,24 @@ where
     let remote_buffer = vec![0; writing_chunk_len];
     let mut local_buffer = remote_buffer.clone();
 
-    let (thread_sender, thread_receiver) = bounded(0);
-    let t = thread::spawn(move || worker(&thread_receiver, remote_buffer, output));
+    let worker_thread;
+    {
+        let (thread_sender, thread_receiver) = bounded(0);
+        worker_thread = thread::spawn(move || worker(&thread_receiver, remote_buffer, output));
 
-    for reading_chunk in Chunks::new(input, reading_chunk_len) {
-        let bytes_to_write = calculator.process(reading_chunk, &mut local_buffer);
-        let (sender, receiver) = bounded(0);
-        thread_sender
-            .send(Commands::Write {
-                data: local_buffer,
-                len: bytes_to_write,
-                sender,
-            })
-            .unwrap();
-        local_buffer = receiver.recv().unwrap();
+        for reading_chunk in Chunks::new(input, reading_chunk_len) {
+            let bytes_to_write = calculator.process(reading_chunk, &mut local_buffer);
+            let (sender, receiver) = bounded(0);
+            thread_sender
+                .send(Commands::Write {
+                    data: local_buffer,
+                    len: bytes_to_write,
+                    sender,
+                })
+                .unwrap();
+            local_buffer = receiver.recv().unwrap();
+        }
     }
-    thread_sender.send(Commands::Quit).unwrap();
-    t.join().unwrap();
+    worker_thread.join().unwrap();
     Ok(())
 }
