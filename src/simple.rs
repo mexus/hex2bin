@@ -16,6 +16,5 @@ where
         let bytes_to_write = calculator.process(reading_chunk, &mut output_buf);
         output.write_all(unsafe { &output_buf.get_unchecked(..bytes_to_write) })?;
     }
-    output.flush()?;
     Ok(())
 }
