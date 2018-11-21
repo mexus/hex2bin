@@ -45,9 +45,10 @@ impl Calculator {
 
         scope(|scope| {
             for (input, output) in per_thread {
-                scope.spawn(move || calculate_hex_to_bin(input, output));
+                scope.spawn(move |_| calculate_hex_to_bin(input, output));
             }
-        });
+        })
+        .unwrap();
         writing_chunk_len
     }
 }
